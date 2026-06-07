@@ -1,0 +1,87 @@
+# WHAT THIS FILE DOES
+# Spins up two local services — Qdrant (the vector database) and Ollama (the local AI model
+# runner) — so the ingestion and query pipelines have somewhere to store vectors and run models.
+#
+# WHERE IT FITS IN THE ARCHITECTURE
+# This is the infrastructure layer. Everything else (parser, chunker, embedder) depends on what
+# these two containers provide. Bring this up first before running any application code.
+#
+# THE KEY CONCEPT TO UNDERSTAND
+# Think of Qdrant like a specialised database that stores arrays of numbers (vectors) and lets you
+# query by similarity instead of exact match — like a findSimilar() instead of a findById(). Think
+# of Ollama like a local Express server that wraps AI models and gives your Node.js code a REST
+# API to call, so no model traffic ever touches a cloud provider.
+#
+# INTERVIEW TALKING POINT
+# "The entire stack runs inside Docker with no external API dependencies, which satisfies data
+# sovereignty requirements — document data never leaves the machine."
+
+services:
+
+  qdrant:
+    image: qdrant/qdrant:v1.18.0
+    # DECISION: Pinned to v1.9.0, not 'latest'.
+    # Pinning makes the project reproducible. 'latest' can silently break vectorStore.ts if Qdrant
+    # ships a major version with breaking API changes. Pin versions in any production-adjacent stack.
+    container_name: docsense-qdrant
+    restart: unless-stopped
+    ports:
+      - "6333:6333"   # REST API  — this is what vectorStore.ts talks to
+      - "6334:6334"   # gRPC      — faster for high-throughput use; exposed but not used in Phase 1
+    volumes:
+      - qdrant_data:/qdrant/storage
+      # A named volume keeps your vectors alive across container restarts.
+      # Without this, every `docker compose down` would wipe all ingested documents.
+    healthcheck:
+      test: ["CMD-SHELL", "curl -sf http://localhost:6333/readyz || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+
+  ollama:
+    image: ollama/ollama:latest
+    container_name: docsense-ollama
+    restart: unless-stopped
+    ports:
+      - "11434:11434"   # Ollama REST API — embedder.ts and llm.ts both call this
+    volumes:
+      - ollama_data:/root/.ollama
+      # Model weights live here. nomic-embed-text is ~274 MB; qwen2.5:14b is ~9 GB.
+      # Without this volume, every restart re-downloads gigabytes of weights.
+    environment:
+      - OLLAMA_KEEP_ALIVE=24h
+      # DECISION: Keep models loaded in GPU VRAM for 24 hours instead of the default 5 minutes.
+      # After a model unloads, the first request takes 10–30 seconds to reload it. During a demo
+      # that pause looks like a crash. 24h means the model stays hot for the whole working session.
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: all
+              capabilities: [gpu]
+      # DECISION: GPU passthrough via the NVIDIA Container Toolkit.
+      # On a 4070 Ti, qwen2.5:14b runs at ~40 tok/s with GPU access. Without this block Ollama
+      # falls back to CPU and drops to ~3 tok/s — the system appears broken during live demos.
+      #
+      # PREREQUISITE (Windows + Docker Desktop):
+      #   1. Ensure Docker Desktop is using the WSL2 backend (Settings → General).
+      #   2. Install NVIDIA Container Toolkit inside WSL2:
+      #        wsl -d Ubuntu  (or your distro)
+      #        curl -fsSL https://nvidia.github.io/libnvidia-container/gpgkey | sudo gpg --dearmor -o /usr/share/keyrings/nvidia-container-toolkit-keyring.gpg
+      #        curl -s -L https://nvidia.github.io/libnvidia-container/stable/deb/nvidia-container-toolkit.list | sudo tee /etc/apt/sources.list.d/nvidia-container-toolkit.list
+      #        sudo apt-get update && sudo apt-get install -y nvidia-container-toolkit
+      #        sudo nvidia-ctk runtime configure --runtime=docker
+      #        sudo systemctl restart docker
+      #   3. Verify with: docker run --rm --gpus all nvidia/cuda:12.0-base-ubuntu22.04 nvidia-smi
+      #
+      # If you skip GPU setup for now, remove the 'deploy' block — Ollama still works on CPU,
+      # just slowly. Re-add it once the toolkit is installed.
+
+volumes:
+  qdrant_data:
+  ollama_data:
+  # Named volumes are managed by Docker and persist across `docker compose down`.
+  # They are only deleted by `docker compose down -v` — never run that unless you want to
+  # wipe all stored vectors and downloaded model weights.
