@@ -21,6 +21,7 @@
 import 'dotenv/config';
 import express from 'express';
 import queryRouter from './routes/query';
+import uploadRouter from './routes/upload';
 
 const app = express();
 const PORT = process.env.PORT ?? 3001;
@@ -33,12 +34,12 @@ app.get('/health', (_req, res) => {
   res.json({ status: 'ok', timestamp: new Date().toISOString() });
 });
 
-// Mount the query route at /query.
-// POST /query is the only endpoint in Phase 2.
+app.use('/upload', uploadRouter);
 app.use('/query', queryRouter);
 
 app.listen(PORT, () => {
   console.log(`\nDocSense API running on http://localhost:${PORT}`);
-  console.log(`  POST http://localhost:${PORT}/query`);
+  console.log(`  POST http://localhost:${PORT}/upload  ← ingest a PDF or DOCX`);
+  console.log(`  POST http://localhost:${PORT}/query   ← ask a question`);
   console.log(`  GET  http://localhost:${PORT}/health\n`);
 });
