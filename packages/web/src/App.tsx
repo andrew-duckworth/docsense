@@ -25,7 +25,7 @@
  * because the state tree is shallow enough that prop drilling is cleaner."
  */
 
-import { useState } from 'react';
+import { useState, useLayoutEffect } from 'react';
 import { DocumentUploader } from './components/DocumentUploader';
 import { ChatInterface } from './components/ChatInterface';
 import { CitationPanel } from './components/CitationPanel';
@@ -34,6 +34,18 @@ import type { CitationSource, IngestedDocument } from './types';
 export function App() {
   const [documents, setDocuments] = useState<IngestedDocument[]>([]);
   const [activeCitation, setActiveCitation] = useState<CitationSource | null>(null);
+
+  // Lazy initializer reads localStorage once — no extra render on mount.
+  const [darkMode, setDarkMode] = useState<boolean>(
+    () => localStorage.getItem('docsense-dark-mode') === 'true'
+  );
+
+  // useLayoutEffect fires after React commits to the DOM but before the
+  // browser paints, so the class is always set before the user sees anything.
+  useLayoutEffect(() => {
+    document.documentElement.classList.toggle('dark', darkMode);
+    localStorage.setItem('docsense-dark-mode', String(darkMode));
+  }, [darkMode]);
 
   function handleDocumentIngested(doc: IngestedDocument) {
     // Guard against duplicate entries if the same file is re-uploaded.
@@ -55,6 +67,14 @@ export function App() {
         <span className="app-header__tagline">
           Document intelligence, on-premises
         </span>
+        <button
+          className="theme-toggle"
+          onClick={() => setDarkMode((prev) => !prev)}
+          aria-label={darkMode ? 'Switch to light mode' : 'Switch to dark mode'}
+          title={darkMode ? 'Switch to light mode' : 'Switch to dark mode'}
+        >
+          {darkMode ? '☀' : '☾'}
+        </button>
       </header>
 
       {/* ── Three-panel body ───────────────────────────────────────────── */}

@@ -615,3 +615,62 @@ button { cursor: pointer; }
   text-decoration: underline;
   cursor: pointer;
 }
+
+/* === Dark theme ============================================================
+   Overrides every CSS variable defined in :root.
+   html.dark wins over :root because element+class (0,1,1) > pseudo-class
+   (0,1,0), so these values cascade down to all components automatically.
+   ========================================================================== */
+html.dark {
+  --bg:         #0f172a;
+  --surface:    #1e293b;
+  --surface-2:  #172033;
+
+  --border:       #334155;
+
+  --text-primary:   #f1f5f9;
+  --text-secondary: #94a3b8;
+  --text-disabled:  #475569;
+
+  --badge-bg:          #1e3a5f;
+  --badge-text:        #93c5fd;
+
+  --success-light: #14532d;
+  --error-bg:      #450a0a;
+  --error-text:    #fca5a5;
+  --error-border:  #7f1d1d;
+
+  --shadow:    0 1px 3px rgba(0, 0, 0, 0.3), 0 1px 2px rgba(0, 0, 0, 0.2);
+  --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.3);
+}
+
+/* Hardcoded #eff6ff hover tints need explicit dark-mode overrides because
+   they aren't CSS variables — they can't be overridden via :root. */
+html.dark .drop-zone:hover:not(.drop-zone--busy),
+html.dark .drop-zone:focus-visible:not(.drop-zone--busy),
+html.dark .drop-zone--over         { background: #1e3a5f; }
+
+html.dark .citation-source-btn--active { background: #1e3a5f; }
+
+/* === Theme toggle button =================================================== */
+.theme-toggle {
+  margin-left: auto;   /* pushes button to the far right of the flex header */
+  background: none;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  color: var(--text-secondary);
+  font-size: 15px;
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  transition: background 0.15s, color 0.15s, border-color 0.15s;
+}
+
+.theme-toggle:hover {
+  background: var(--bg);
+  color: var(--text-primary);
+  border-color: var(--border-focus);
+}
