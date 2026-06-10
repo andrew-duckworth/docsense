@@ -30,9 +30,10 @@ export default defineConfig({
   server: {
     port: 5173,
     proxy: {
-      '/upload': { target: 'http://localhost:3001', changeOrigin: true },
-      '/query':  { target: 'http://localhost:3001', changeOrigin: true },
-      '/health': { target: 'http://localhost:3001', changeOrigin: true },
+      '/documents': { target: 'http://localhost:3001', changeOrigin: true },
+      '/upload':    { target: 'http://localhost:3001', changeOrigin: true },
+      '/query':     { target: 'http://localhost:3001', changeOrigin: true },
+      '/health':    { target: 'http://localhost:3001', changeOrigin: true },
     },
   },
 });

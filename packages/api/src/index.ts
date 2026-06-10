@@ -20,6 +20,7 @@
 
 import 'dotenv/config';
 import express from 'express';
+import documentsRouter from './routes/documents';
 import queryRouter from './routes/query';
 import uploadRouter from './routes/upload';
 
@@ -34,12 +35,14 @@ app.get('/health', (_req, res) => {
   res.json({ status: 'ok', timestamp: new Date().toISOString() });
 });
 
+app.use('/documents', documentsRouter);
 app.use('/upload', uploadRouter);
 app.use('/query', queryRouter);
 
 app.listen(PORT, () => {
   console.log(`\nDocSense API running on http://localhost:${PORT}`);
-  console.log(`  POST http://localhost:${PORT}/upload  ← ingest a PDF or DOCX`);
-  console.log(`  POST http://localhost:${PORT}/query   ← ask a question`);
+  console.log(`  GET  http://localhost:${PORT}/documents ← list stored documents`);
+  console.log(`  POST http://localhost:${PORT}/upload    ← ingest a PDF or DOCX`);
+  console.log(`  POST http://localhost:${PORT}/query     ← ask a question`);
   console.log(`  GET  http://localhost:${PORT}/health\n`);
 });

@@ -176,11 +176,57 @@ Expose the pipeline via API and build the UI.
 
 ### Phase 4 — Polish (FDE differentiators)
 These are the things that show depth in interviews.
+Complete and test each task fully before moving to the next.
+Push to GitHub after each task. Stop and report when done.
 
-- [ ] Hybrid search: BM25 keyword search + vector search combined
-- [ ] Multi-document queries ("compare these two documents")
-- [ ] Simple eval harness: a script that runs test Q&A pairs and scores relevance
-- [ ] Docker Compose one-liner deploy with a clear README
+- [ ] Task 4.1 — Document persistence: Add GET /documents endpoint
+      that queries Qdrant for all unique filenames currently stored.
+      Frontend calls this on startup so the sidebar reflects actual
+      Qdrant state, not just the current session.
+      IMPLEMENTATION NOTE: DocumentUploader.tsx IS the sidebar — it
+      renders on the left with the document list already built in.
+      No new component needed. Checkbox selection (Task 4.3) goes
+      into the existing document list inside DocumentUploader.
+
+- [ ] Task 4.2 — Hybrid search: Combine BM25 keyword search with
+      existing vector search. Merge results using Reciprocal Rank
+      Fusion (RRF). The retriever.ts interface must not change —
+      hybrid logic is internal only.
+      IMPLEMENTATION NOTE: Use an in-memory BM25 library (e.g.
+      wink-bm25-text-search). Do NOT use Qdrant sparse vectors —
+      that would require re-ingesting all documents.
+      DECISION comment to include: "Chose in-memory BM25 over Qdrant
+      sparse vectors because it requires no re-ingestion, and at the
+      document scale this system targets the performance difference is
+      negligible. The trade-off: sparse vectors would be faster at
+      100k+ chunks; in-memory BM25 is the right call below that."
+      Also add a DECISION comment explaining the RRF formula and why
+      it was chosen over weighted averaging.
+
+- [ ] Task 4.3 — Multi-document queries: Add checkbox selection to
+      the document sidebar (requires Task 4.1). Checkboxes go inside
+      the existing DocumentUploader component — no new sidebar needed.
+      Pass selected filenames to POST /query. Retrieval layer filters
+      Qdrant by selected documents. Prompt template instructs LLM to
+      compare and contrast when multiple documents are selected.
+
+- [ ] Task 4.4 — Eval harness: Script at scripts/eval.ts that runs
+      10-15 test Q&A pairs against the NZ government PDFs. Use the
+      Claude API with model claude-fable-5 to generate test questions
+      automatically and evaluate answer quality. Output a results table
+      and final score. Minimum bar: 8/15 before moving on.
+      IMPLEMENTATION NOTE: Check Qdrant first (http://localhost:6333/dashboard).
+      If NZ government PDFs are present from earlier testing, use them.
+      If Qdrant is empty, the harness must ingest its own test documents
+      as part of setup so the script is self-contained for anyone who
+      clones the repo.
+
+- [ ] Task 4.5 — README and deploy: Full README.md using the structure
+      defined at the bottom of this file. Include architecture diagram,
+      quick start, design decisions, eval results table, and what I'd
+      add with more time. Must be clear enough for a Palantir or
+      Datacom hiring manager to understand both what it does and why
+      every decision was made.
 
 ---
 

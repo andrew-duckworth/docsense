@@ -111,3 +111,52 @@ export async function upsertChunks(chunks: EmbeddedChunk[]): Promise<void> {
 export async function getCollectionInfo() {
   return client.getCollection(COLLECTION_NAME);
 }
+
+// Scrolls every point in the collection and aggregates per-document stats.
+// Returns the same IngestedDocument shape the upload pipeline produces so the
+// frontend can render the sidebar identically whether the data came from a
+// fresh upload or a page refresh.
+export async function listDocuments(): Promise<{ filename: string; chunksCreated: number; characterCount: number }[]> {
+  // Guard: if the collection doesn't exist yet (no documents ingested ever),
+  // return an empty list rather than letting the scroll call throw.
+  try {
+    const { collections } = await client.getCollections();
+    if (!collections.some((c) => c.name === COLLECTION_NAME)) return [];
+  } catch {
+    return [];
+  }
+
+  // DECISION: Use Qdrant's scroll API (cursor-based pagination) rather than
+  // fetching all points at once. Scroll is safe at any collection size —
+  // fetching all points in one request would OOM the client at large scale.
+  const docMap = new Map<string, { chunksCreated: number; characterCount: number }>();
+  let offset: string | number | null = null;
+
+  do {
+    const result = await client.scroll(COLLECTION_NAME, {
+      with_payload: true,
+      with_vector: false,
+      limit: 250,
+      ...(offset !== null ? { offset } : {}),
+    });
+
+    for (const point of result.points) {
+      const p = point.payload as { filename: string; text: string } | null;
+      if (!p?.filename) continue;
+
+      const entry = docMap.get(p.filename);
+      if (entry) {
+        entry.chunksCreated += 1;
+        entry.characterCount += p.text?.length ?? 0;
+      } else {
+        docMap.set(p.filename, { chunksCreated: 1, characterCount: p.text?.length ?? 0 });
+      }
+    }
+
+    offset = result.next_page_offset ?? null;
+  } while (offset !== null);
+
+  return Array.from(docMap.entries())
+    .sort(([a], [b]) => a.localeCompare(b))
+    .map(([filename, stats]) => ({ filename, ...stats }));
+}

@@ -25,7 +25,7 @@
  * because the state tree is shallow enough that prop drilling is cleaner."
  */
 
-import { useState, useLayoutEffect } from 'react';
+import { useState, useLayoutEffect, useEffect } from 'react';
 import { DocumentUploader } from './components/DocumentUploader';
 import { ChatInterface } from './components/ChatInterface';
 import { CitationPanel } from './components/CitationPanel';
@@ -46,6 +46,15 @@ export function App() {
     document.documentElement.classList.toggle('dark', darkMode);
     localStorage.setItem('docsense-dark-mode', String(darkMode));
   }, [darkMode]);
+
+  // On mount, load whatever documents are already in Qdrant so the sidebar
+  // reflects persisted state, not just the current session.
+  useEffect(() => {
+    fetch('/documents')
+      .then((r) => r.json())
+      .then(({ documents }: { documents: IngestedDocument[] }) => setDocuments(documents))
+      .catch(() => { /* Qdrant not running — sidebar starts empty, uploads still work */ });
+  }, []);
 
   function handleDocumentIngested(doc: IngestedDocument) {
     // Guard against duplicate entries if the same file is re-uploaded.
