@@ -130,7 +130,7 @@ export async function listDocuments(): Promise<{ filename: string; chunksCreated
   // fetching all points at once. Scroll is safe at any collection size —
   // fetching all points in one request would OOM the client at large scale.
   const docMap = new Map<string, { chunksCreated: number; characterCount: number }>();
-  let offset: string | number | null = null;
+  let offset: string | number | Record<string, unknown> | null = null;
 
   do {
     const result = await client.scroll(COLLECTION_NAME, {
