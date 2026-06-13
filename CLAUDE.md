@@ -227,6 +227,10 @@ Push to GitHub after each task. Stop and report when done.
       add with more time. Must be clear enough for a Palantir or
       Datacom hiring manager to understand both what it does and why
       every decision was made.
+      EVAL RESULTS: 14/15 passed, avg quality 4.80/5. One failure: 
+      retrieval returned wrong chunk type for a list question — BM25 
+      keyword boost ranked Emergency Housing Special Needs Grants 
+      higher than Benefit Advances. Fix: reranker or increased top-K.
 
 ---
 
