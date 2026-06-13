@@ -34,6 +34,7 @@ import type { CitationSource, IngestedDocument } from './types';
 export function App() {
   const [documents, setDocuments] = useState<IngestedDocument[]>([]);
   const [activeCitation, setActiveCitation] = useState<CitationSource | null>(null);
+  const [selectedDocuments, setSelectedDocuments] = useState<string[]>([]);
 
   // Lazy initializer reads localStorage once — no extra render on mount.
   const [darkMode, setDarkMode] = useState<boolean>(
@@ -91,11 +92,14 @@ export function App() {
         <DocumentUploader
           documents={documents}
           onDocumentIngested={handleDocumentIngested}
+          selectedDocuments={selectedDocuments}
+          onSelectionChange={setSelectedDocuments}
         />
 
         <ChatInterface
           onCitationSelect={setActiveCitation}
           activeCitation={activeCitation}
+          selectedDocuments={selectedDocuments}
         />
 
         {/* CitationPanel is conditionally rendered — the chat area expands

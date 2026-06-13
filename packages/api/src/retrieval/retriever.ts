@@ -99,6 +99,7 @@ interface FusionCandidate {
 export async function retrieve(
   question: string,
   topK: number = DEFAULT_TOP_K,
+  filterFilenames?: string[],
 ): Promise<RetrievedChunk[]> {
   const candidateCount = topK * CANDIDATE_MULTIPLIER;
 
@@ -108,6 +109,16 @@ export async function retrieve(
   // in incompatible spaces, like comparing GPS coordinates to zip codes.
   const queryVector = await embedQuery(question);
 
+  // DECISION: When filterFilenames is provided, both search arms are scoped to
+  // only those files. The Qdrant filter restricts vector search server-side
+  // (no extra network round-trip — the filter is evaluated during ANN search).
+  // The BM25 arm filters client-side after scoring, which keeps IDF weights
+  // representative of the full corpus.
+  const qdrantFilter =
+    filterFilenames && filterFilenames.length > 0
+      ? { must: [{ key: 'filename', match: { any: filterFilenames } }] }
+      : undefined;
+
   // Step 2: Run both search arms in parallel — they're independent reads.
   const [vectorHits, keywordHits] = await Promise.all([
     client.search(COLLECTION_NAME, {
@@ -115,8 +126,9 @@ export async function retrieve(
       limit: candidateCount,
       score_threshold: SCORE_THRESHOLD,
       with_payload: true,
+      ...(qdrantFilter ? { filter: qdrantFilter } : {}),
     }),
-    keywordSearch(question, candidateCount),
+    keywordSearch(question, candidateCount, filterFilenames),
   ]);
 
   // Step 3: Reciprocal Rank Fusion. Walk each ranked list and add

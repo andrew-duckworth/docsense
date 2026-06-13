@@ -50,19 +50,34 @@ export interface BuiltPrompt {
 // the system prompt sets the persona and rules; the user message is the actual
 // query. Concatenating them into one string loses that distinction and often
 // produces worse output.
-const SYSTEM_PROMPT = `You are a document assistant. Your job is to answer questions using only the context provided below.
+const SYSTEM_PROMPT_BASE = `You are a document assistant. Your job is to answer questions using only the context provided below.
 
 Rules:
 - Base your answer exclusively on the provided context. Do not use outside knowledge.
 - If the answer is not present in the context, say: "I don't have enough information in the provided documents to answer that."
 - Cite your sources using [1], [2], etc. notation inline as you write your answer.
 - Be concise and direct. Prefer bullet points for multi-part answers.
-- Do not fabricate quotes or invent details not present in the context.`;
+- Do not fabricate quotes or invent details not present in the context.
+- Only state reasons that are explicitly written in the source text. If the reason is not stated directly, say so.`;
+
+// DECISION: Compare-and-contrast instruction is appended only when the user
+// has selected multiple documents. Adding it to every query would cause the
+// LLM to waste tokens looking for differences even when only one document is
+// in scope — it would either hallucinate distinctions or pad the answer with
+// "both documents agree on…" noise. Scoping it to multi-document queries
+// keeps single-document answers clean and focused.
+const MULTI_DOC_INSTRUCTION = `
+- Multiple source documents have been provided. Where relevant, compare and contrast their content: highlight agreements, note contradictions, and make clear which document says what.`;
 
 export function buildPrompt(
   question: string,
   chunks: RetrievedChunk[],
+  selectedFilenames?: string[],
 ): BuiltPrompt {
+  const systemPrompt =
+    selectedFilenames && selectedFilenames.length > 1
+      ? SYSTEM_PROMPT_BASE + MULTI_DOC_INSTRUCTION
+      : SYSTEM_PROMPT_BASE;
   // DECISION: Chunks are renumbered [1]–[N] here regardless of their Qdrant
   // rank order. The LLM doesn't need to know about cosine scores — it just
   // needs clean, labelled reference numbers it can cite in its response.
@@ -93,8 +108,11 @@ export function buildPrompt(
   // pre-formed answer.
   const userMessage = `Context:\n\n${contextBlock}\n\n---\n\nQuestion: ${question}\n\nAnswer (cite sources using [1], [2], etc.):`;
 
+  console.log('[DEBUG] systemPrompt:\n', systemPrompt);
+  console.log('[DEBUG] userMessage:\n', userMessage);
+
   return {
-    systemPrompt: SYSTEM_PROMPT,
+    systemPrompt,
     userMessage,
     citations,
   };

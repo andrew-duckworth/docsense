@@ -165,8 +165,17 @@ async function buildIndex(pointCount: number): Promise<typeof cache> {
  * Ranks stored chunks by BM25 keyword relevance to the question.
  * Returns an empty array when the collection is too small to index —
  * callers treat that as "no keyword signal" and rely on vector search alone.
+ *
+ * When filterFilenames is provided, only chunks from those files are returned.
+ * The filter is applied after BM25 scoring so the ranking reflects the full
+ * corpus — restricting before scoring would skew IDF weights toward the
+ * smaller filtered set and produce misleading relevance scores.
  */
-export async function keywordSearch(question: string, limit: number): Promise<KeywordHit[]> {
+export async function keywordSearch(
+  question: string,
+  limit: number,
+  filterFilenames?: string[],
+): Promise<KeywordHit[]> {
   const pointCount = await exactPointCount();
   if (pointCount === 0) return [];
 
@@ -179,11 +188,21 @@ export async function keywordSearch(question: string, limit: number): Promise<Ke
   // (e.g. a question made entirely of stop words like "what is it about").
   // That's a legitimate "no keyword signal" case, not an error.
   try {
-    const results = cache!.engine.search(question, limit);
-    return results.map(([docIndex, score]) => ({
+    // Fetch extra candidates before filtering so we still return `limit` hits
+    // after the filename filter removes some results.
+    const fetchLimit = filterFilenames?.length ? limit * 4 : limit;
+    const results = cache!.engine.search(question, fetchLimit);
+    const hits = results.map(([docIndex, score]) => ({
       chunk: cache!.chunks[docIndex],
       score,
     }));
+
+    if (filterFilenames && filterFilenames.length > 0) {
+      const allowed = new Set(filterFilenames);
+      return hits.filter((h) => allowed.has(h.chunk.metadata.filename)).slice(0, limit);
+    }
+
+    return hits;
   } catch {
     return [];
   }

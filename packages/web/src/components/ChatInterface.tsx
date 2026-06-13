@@ -32,9 +32,10 @@ import { parseSSE } from '../utils/parseSSE';
 interface Props {
   onCitationSelect: (citation: CitationSource | null) => void;
   activeCitation: CitationSource | null;
+  selectedDocuments: string[];
 }
 
-export function ChatInterface({ onCitationSelect, activeCitation }: Props) {
+export function ChatInterface({ onCitationSelect, activeCitation, selectedDocuments }: Props) {
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState('');
   const [isStreaming, setIsStreaming] = useState(false);
@@ -66,7 +67,10 @@ export function ChatInterface({ onCitationSelect, activeCitation }: Props) {
       const response = await fetch('/query', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ question }),
+        body: JSON.stringify({
+          question,
+          ...(selectedDocuments.length > 0 ? { filterFilenames: selectedDocuments } : {}),
+        }),
       });
 
       if (!response.ok || !response.body) {

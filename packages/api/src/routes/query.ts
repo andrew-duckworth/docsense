@@ -38,6 +38,7 @@ const router = Router();
 // The shape of a well-formed request body.
 interface QueryRequest {
   question: string;
+  filterFilenames?: string[]; // when set, retrieval is scoped to these files only
 }
 
 // Every SSE event sent to the client has one of these shapes.
@@ -55,7 +56,7 @@ function sendEvent(res: Response, event: SseEvent): void {
 }
 
 router.post('/', async (req: Request, res: Response) => {
-  const { question } = req.body as QueryRequest;
+  const { question, filterFilenames } = req.body as QueryRequest;
 
   // Input validation — reject empty or missing questions immediately.
   if (!question || typeof question !== 'string' || question.trim().length === 0) {
@@ -76,12 +77,23 @@ router.post('/', async (req: Request, res: Response) => {
 
   try {
     // ── Step 1: Retrieve ────────────────────────────────────────────────────
-    const chunks = await retrieve(question.trim());
+    const validFilter =
+      Array.isArray(filterFilenames) && filterFilenames.length > 0
+        ? filterFilenames
+        : undefined;
+
+    const chunks = await retrieve(question.trim(), undefined, validFilter);
+
+    console.log('[DEBUG] Retrieved chunks:');
+    chunks.forEach((c, i) => console.log(`  [${i}] filename=${c.metadata.filename} score=${c.score.toFixed(3)} text=${JSON.stringify(c.text.slice(0, 200))}`));
 
     if (chunks.length === 0) {
+      const scope = validFilter
+        ? `the selected document${validFilter.length > 1 ? 's' : ''}`
+        : 'your documents';
       sendEvent(res, {
         type: 'error',
-        message: 'No relevant documents found. Try ingesting a document first.',
+        message: `No relevant chunks found in ${scope}. Try uploading a document first, or adjust your selection.`,
       });
       sendEvent(res, { type: 'done' });
       res.end();
@@ -89,7 +101,7 @@ router.post('/', async (req: Request, res: Response) => {
     }
 
     // ── Step 2: Build prompt ────────────────────────────────────────────────
-    const prompt = buildPrompt(question.trim(), chunks);
+    const prompt = buildPrompt(question.trim(), chunks, validFilter);
 
     // ── Step 3: Stream the answer ───────────────────────────────────────────
     // Each chunk from the LLM is forwarded immediately as an SSE event.

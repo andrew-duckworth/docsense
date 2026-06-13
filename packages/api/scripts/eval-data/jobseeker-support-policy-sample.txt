@@ -1,0 +1,95 @@
+Jobseeker Support — Policy and Eligibility Overview (Sample Reference Document)
+
+PURPOSE
+This document is a self-contained, synthetic sample modelled on New Zealand
+Ministry of Social Development (MSD) welfare guidance. It exists so the DocSense
+evaluation harness has something concrete to ingest and ask questions about when
+the Qdrant vector store is otherwise empty. The figures below are illustrative
+and must not be relied on for real entitlement decisions.
+
+1. WHAT JOBSEEKER SUPPORT IS
+Jobseeker Support is a weekly income-support payment for people who are not in
+full-time employment and who are either actively looking for work, or temporarily
+unable to work because of a health condition, injury, or disability. It replaced
+the former Unemployment Benefit and Sickness Benefit, bringing both groups under
+a single payment with a shared set of obligations.
+
+2. CORE ELIGIBILITY CRITERIA
+To qualify for Jobseeker Support a person must meet all of the following:
+- Be aged 18 years or older. People aged 19 with dependent children may also
+  qualify under the same category.
+- Be a New Zealand citizen or hold permanent residence, and ordinarily live in
+  New Zealand.
+- Have lived in New Zealand for a continuous period of at least two years at any
+  one time since becoming a citizen or resident.
+- Not be in full-time employment, defined as 30 or more hours of paid work per
+  week.
+- Have income and cash assets below the relevant thresholds described in
+  sections 4 and 5.
+
+3. WORK OBLIGATIONS
+Most people receiving Jobseeker Support have work obligations. This means they
+must take reasonable steps to find and prepare for work, including:
+- Attending appointments and seminars arranged by their case manager.
+- Preparing or updating a curriculum vitae.
+- Applying for suitable job vacancies and accepting offers of suitable work.
+A person whose Jobseeker Support is granted on the ground of a health condition
+may have their work obligations deferred while that condition is assessed. Failure
+to meet obligations without a good and sufficient reason can result in a sanction
+that reduces or suspends the payment.
+
+4. INCOME THRESHOLDS AND ABATEMENT
+Jobseeker Support is income-tested. A single recipient can earn up to 160 dollars
+gross per week before their payment begins to reduce. For every dollar of income
+above that threshold, the weekly payment reduces — abates — by 70 cents. Once
+income reaches the point where the payment would fall to zero, entitlement ends
+for that week. Partnered recipients have the combined household income assessed
+against a higher joint threshold.
+
+5. ASSET TEST
+Unlike the main benefit payment, Jobseeker Support itself is not directly asset
+tested for the base entitlement; however, cash assets are relevant to supplementary
+assistance. For supplementary help such as an Advance Payment of Benefit, a single
+person is generally expected to hold no more than 1,257 dollars in immediately
+available cash assets, and a couple no more than 2,094 dollars, before that extra
+help is reduced. The family home and an ordinary motor vehicle are not counted as
+cash assets.
+
+6. STAND-DOWN PERIOD
+A new grant of Jobseeker Support usually carries a stand-down period before the
+first payment is made. The standard stand-down is one to two weeks, and the exact
+length depends on the income the person or their partner earned in the 26 weeks
+before applying. People who were made redundant or who earned higher incomes
+before applying generally face a longer stand-down than those who had little or no
+recent income.
+
+7. 26-WEEK REAPPLICATION
+A recent change to welfare settings requires some Jobseeker Support clients to
+reapply for their payment every 26 weeks, rather than every 52 weeks as was
+previously the case. The shorter reapplication cycle is intended to bring clients
+into more regular contact with their case manager, refresh their work plan, and
+confirm that their circumstances and obligations are still current. Clients are
+notified ahead of their reapplication date and can complete the process online.
+
+8. PAYMENT RATES
+Net weekly rates depend on a person's situation. As an illustrative example, a
+single person aged 25 or over with no children might receive about 337 dollars net
+per week, while a single person aged 20 to 24 with no children might receive a
+lower rate of about 278 dollars net per week. Sole parents are paid under a
+different category, Sole Parent Support, rather than Jobseeker Support.
+
+9. SUPPLEMENTARY ASSISTANCE
+People on Jobseeker Support may also qualify for additional, separately assessed
+help, including the Accommodation Supplement toward rent, board, or mortgage
+costs; a Disability Allowance for ongoing additional costs caused by a health
+condition; and Temporary Additional Support as a last resort for essential living
+costs that cannot be met from income. Each of these has its own eligibility rules
+and is not automatic.
+
+10. RELATIONSHIP TO EMPLOYMENT SUPPORT
+The policy intent behind Jobseeker Support is to provide income while actively
+moving people into sustainable employment. Case managers can refer clients to
+employment programmes, training, work-confidence seminars, and industry
+partnerships. Moving into work of 30 or more hours per week ends the Jobseeker
+Support entitlement, but recipients may still qualify for in-work supplementary
+assistance depending on their income and family circumstances.

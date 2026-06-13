@@ -212,7 +212,7 @@ Push to GitHub after each task. Stop and report when done.
 
 - [ ] Task 4.4 — Eval harness: Script at scripts/eval.ts that runs
       10-15 test Q&A pairs against the NZ government PDFs. Use the
-      Claude API with model claude-fable-5 to generate test questions
+      Claude API with model claude-opus-4-8 to generate test questions
       automatically and evaluate answer quality. Output a results table
       and final score. Minimum bar: 8/15 before moving on.
       IMPLEMENTATION NOTE: Check Qdrant first (http://localhost:6333/dashboard).

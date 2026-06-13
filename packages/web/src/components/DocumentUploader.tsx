@@ -30,6 +30,8 @@ import { parseSSE } from '../utils/parseSSE';
 interface Props {
   documents: IngestedDocument[];
   onDocumentIngested: (doc: IngestedDocument) => void;
+  selectedDocuments: string[];
+  onSelectionChange: (selected: string[]) => void;
 }
 
 const STAGE_ORDER: UploadStage[] = ['parsing', 'chunking', 'embedding', 'storing'];
@@ -41,7 +43,7 @@ const STAGE_LABELS: Record<UploadStage, string> = {
   storing:   'Storing in Qdrant',
 };
 
-export function DocumentUploader({ documents, onDocumentIngested }: Props) {
+export function DocumentUploader({ documents, onDocumentIngested, selectedDocuments, onSelectionChange }: Props) {
   const [status, setStatus] = useState<UploadStatus>({ phase: 'idle' });
   const [isDragOver, setIsDragOver] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
@@ -181,21 +183,55 @@ export function DocumentUploader({ documents, onDocumentIngested }: Props) {
 
       {/* Ingested document list */}
       {documents.length > 0 && (
-        <ul className="document-list">
-          {documents.map((doc) => (
-            <li key={`${doc.filename}-${doc.chunksCreated}`} className="document-item">
-              <span className="document-item__icon">&#10003;</span>
-              <div className="document-item__body">
-                <span className="document-item__name" title={doc.filename}>
-                  {doc.filename}
-                </span>
-                <span className="document-item__meta">
-                  {doc.chunksCreated} chunks &middot; {doc.characterCount.toLocaleString()} chars
-                </span>
-              </div>
-            </li>
-          ))}
-        </ul>
+        <>
+          <div className="document-list-header">
+            <span className="document-list-header__label">
+              {selectedDocuments.length === 0
+                ? 'Querying all docs'
+                : `Querying ${selectedDocuments.length} of ${documents.length}`}
+            </span>
+            {selectedDocuments.length > 0 && (
+              <button
+                className="link-btn document-list-header__clear"
+                onClick={() => onSelectionChange([])}
+              >
+                Clear
+              </button>
+            )}
+          </div>
+
+          <ul className="document-list">
+            {documents.map((doc) => {
+              const isChecked = selectedDocuments.includes(doc.filename);
+              return (
+                <li key={`${doc.filename}-${doc.chunksCreated}`} className="document-item">
+                  <label className="document-item__label">
+                    <input
+                      type="checkbox"
+                      className="document-item__checkbox"
+                      checked={isChecked}
+                      onChange={() => {
+                        if (isChecked) {
+                          onSelectionChange(selectedDocuments.filter((f) => f !== doc.filename));
+                        } else {
+                          onSelectionChange([...selectedDocuments, doc.filename]);
+                        }
+                      }}
+                    />
+                    <div className="document-item__body">
+                      <span className="document-item__name" title={doc.filename}>
+                        {doc.filename}
+                      </span>
+                      <span className="document-item__meta">
+                        {doc.chunksCreated} chunks &middot; {doc.characterCount.toLocaleString()} chars
+                      </span>
+                    </div>
+                  </label>
+                </li>
+              );
+            })}
+          </ul>
+        </>
       )}
     </div>
   );

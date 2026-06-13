@@ -53,12 +53,15 @@ type Provider = 'ollama' | 'claude';
 const PROVIDER: Provider = (process.env.LLM_PROVIDER as Provider) ?? 'ollama';
 
 async function* streamOllama(prompt: BuiltPrompt): AsyncGenerator<string> {
+  const messages = [
+    { role: 'system', content: prompt.systemPrompt },
+    { role: 'user', content: prompt.userMessage },
+  ];
+  console.log('[DEBUG] Ollama messages:', JSON.stringify(messages, null, 2));
+
   const stream = await ollama.chat({
     model: OLLAMA_MODEL,
-    messages: [
-      { role: 'system', content: prompt.systemPrompt },
-      { role: 'user', content: prompt.userMessage },
-    ],
+    messages,
     stream: true,
   });
 
